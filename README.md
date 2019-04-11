@@ -1,4 +1,4 @@
-# AWS
+# [AWS Certified Developer - Associate](https://aws.amazon.com/certification/certified-developer-associate/)
 
 > ## IAM(Identity Access Management)
 	- User
@@ -314,6 +314,14 @@ So when things do go wrong you can go in and diagnose and debug problems quickly
 
 
 
-
-- Online Mock Test
+---
+>  Online Mock Test
 [Whizlabs](https://www.whizlabs.com/aws-developer-associate/online-course/)
+
+
+>  Refrences
+
+- ### [User Guid](https://docs.aws.amazon.com/index.html)
+- ### [Exam Guid](https://d1.awsstatic.com/training-and-certification/docs-dev-associate/AWS_Certified_Developer_Associate_Updated_June_2018_Exam_Guide_v1.3.pdf)
+- ### [Certification Prep](https://aws.amazon.com/certification/certification-prep/)
+---
