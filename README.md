@@ -1,5 +1,10 @@
 # [AWS Certified Developer - Associate](https://aws.amazon.com/certification/certified-developer-associate/)
 
+<center>
+<img alt="Amazon Web Services" src="https://assets.pcmag.com/media/images/514204-amazon-web-services-logo.jpg?width=333&height=245"> <br>
+For more information on AWS, visit <a href="https://aws.amazon.com/">aws.amazon.com</a>
+</center>
+
 > ## IAM(Identity Access Management)
 	- User
 	- Groups
@@ -21,54 +26,144 @@
 ---
 > ## EC2 (Elastic compute cloud) just virtual machines in cloud
 
-- ### **EC2 Options**
-    - #### On Demand (un predectable workloads)
+	Elastic Compute Cloud - Backbone of AWS, provides re-sizable compute capacity in the cloud. Reduces the time required to obtain and boot new server instances to minutes allowing you to quickly scale capacity, both up and down, as your computing requirements change. 
+- Once an Instance has been launched with instance store storage, you can not attach additional instance store volumes after the instance is launched, only EBS volumes
+- By default both Root volumes will be deleted on termination, however you can tell AWS to keep the root device volume on a new instance during launch
+- Can not encrypt root volumes, but you can encrypt any additional volumes that are added and attached to an EC2 instance.
+- ### **Roles**
+	- You can only assign an EC2 role to an instance on create. You can not assign a role after the instance has been created and/or is running
+	- You can change the permissions on a role post creation, but can NOT assign a new role to an existing instance
+	- Role permissions can be changed, but not swapped
+	- Roles are more secure then storing your access key and secret key on individual EC2 instances
+	- Roles are easier to manager, You can assign a role, and change permissions on that role at any time which take effect immediately
+	- Roles are universal, you can use them in any region
+
+- ### **EC2 Pricing Options/Models**
+    - **On Demand (un predectable workloads)**
 		- allows to pay a fix rate by hour or by second with no commitment
 		- Low cost and flexible without any commitment
 		- Used for application with short term or spiky or unpredictible workloads
 		- Application being tested or developed on aws for first time
-    - #### Reserved (steady state or predectable usage)
+    - **Reserved (steady state or predectable usage)**
 		- provides capacity reservation and offers discount on yearly contract
 		- used for application with steady state or predictable usage
 		- user can make up-front payment to reduce the total cost
 		- Standard Ris
 		- Convertable Ris
 		- Scheduled Ris
-    - #### Spot
+    - **Spot**
 		- allows to bid on whatever price you want
 		- used for applications that have flexible start and end times
 		- used by chemical companies
-		- NOTE: if a spot instance is terminated by Amazon EC2, you will not be charged for partial hour usage
+		- **NOTE:** if a spot instance is terminated by Amazon EC2, you will not be charged for partial hour usage
 		However, if you terminate the instance yourself, you will be charged for complete hour in which the instance ran.
-    - #### Dedicated hosts
+    - **Dedicated hosts**
 		- physical EC2 servers dedicated to you
-		
+				
 - ### **EC2 Types**
 	 - FIGHT DR MC PX
----
-> ## EBS (Virtual Disk in cloud that is attached to EC2 instance) Elastic Block Storage
-- ### **EBS Volume Types**		
-    - #### **SSD**
-		- General Purpose SSD (GP2)
-			- Less than 10,000 IOPS
-		- Provisioned IOPS SSD (101)- Very high performance
-			- MORE THAT 10,000 IOPS
-			- Provision of 20,000 IOPS per volume
-			- Designed for I/O intensive application
-		
-	- #### **MAGNETIC**
-		- **Throughtput optimized HDD (ST1)**
-			- Bid Data
-			- Data warehouses
-			- Cannot be a boot volume
-		- **Cold HDD (SC1)**
-			- LOW COST
-			- File Servers		
-			- cannot be boot volume
-		- **Magnetic (standard)**
-			- CAN BE A ROOT VOLUME OR BOOTABLE VOLUME LIKE c: DRIVE
-			- lowest cost of all EBS volume types
-			- infrequest access
+
+- ### **Instance sizing:**
+	- T2 - Lowest Cost General Purpose - Web/Small DBs
+	- M4 - General Purpose - App Servers
+	- M3 - General Purpose - App servers
+	- C4 - Compute Optimized - CPU Intensive Apps/DBs
+	- C3 - Compute Optimized - CPU Intensive Apps/DBs
+	- R3 - Memory Optimized - Memory Intensive Apps/DBs
+	- G2 - Graphics / General Purpose - Video Encoding/Machine Learning/3D App Streaming
+	- I2 - High Speed Storage - NoSQL DBs, Data Warehousing
+	- D2 - Dense Storage - Fileservers/Data Warehousing/Hadoop
+	- D - Density
+	- I - IOPS
+	- R - RAM
+	- T - Cheap General Purpose
+	- M - Main General Purpose
+	- C - Compute
+	- G - Graphics
+
+- ### **Storage Types:**
+	- **Instance Store (Ephemeral):**
+		- Instances using instance store storage can not be stopped. If they are, data loss would result
+		- If there is an issue with the underlying host and your instance needs to be moved, or is lost, Data is also lost
+		- Instance store volumes cannot be detached and reattached to other instances; They exist only for the life of that instance
+		- Best used for scratch storage, storage that can be lost at any time with no bad ramifications, such as a cache store
+	- **EBS (Elastic Block Storage):- Virtual Disk in cloud that is attached to EC2 instance**
+		- Elastic Block Storage is persistent storage that can be used to procure storage to EC2 instances.
+		- You can NOT mount 1 EBS volume to multiple EC2 instances instead you must use EFS
+		- Default action for EBS volumes is for the root EBS volume to be deleted when the instance is terminated
+		- By default, ROOT volumes will be deleted on termination, however with EBS volumes only, you can tell AWS to keep the root device volume
+		- EBS backed instances can be stopped, you will NOT lose any data
+		- EBS volumes can be detached and reattached to other EC2 instances
+		- Number of EBS volumes: 5000
+			- **EBS Volume Types**		
+				- **SSD**
+					- General Purpose SSD (GP2)
+						- Less than 10,000 IOPS
+						- Total volume storage of General Purpose SSD (gp2) volumes: 20TiB
+					- Provisioned IOPS SSD (101)- Very high performance
+						- MORE THAT 10,000 IOPS
+						- Provision of 20,000 IOPS per volume
+						- Designed for I/O intensive application
+						- Total volume storage of Provisioned IOPS SSD (io1) volumes: 20TiB					
+				-  **MAGNETIC**
+					- **Throughtput optimized HDD (ST1)**
+						- Bid Data
+						- Data warehouses
+						- Cannot be a boot volume
+						- Total volume storage of Throughput Optimized HDD (st1): 20TiB
+					- **Cold HDD (SC1)**
+						- LOW COST
+						- File Servers		
+						- cannot be boot volume
+						- Total volume storage of Cold HDD (sc1): 20TiB
+					- **Magnetic (standard)**
+						- CAN BE A ROOT VOLUME OR BOOTABLE VOLUME LIKE c: DRIVE
+						- lowest cost of all EBS volume types
+						- infrequest access
+						- Ideal for workloads where data is accessed infrequently and apps where the lowest cost storage is important.
+						- Ideal for fileservers
+						- Total volume storage of Magnetic volumes: 20TiB
+- ### **Encryption:**
+	- Root Volumes cannot be encrypted by default, you need a 3rd party utility
+	- Other volumes added to an instance can be encrypted.
+
+- ### **AMI's: (Amazon Machine Images)**
+	- Template for the root volume for the instance (OS, Apps, etc)
+	- AMI's are simply snapshots of a root volume and is stored in S3
+	- AMI's are regional. You can only launch an AMI from the region in which it was stored
+	- You can copy AMI's to other regions using the console, CLI or Amazon EC2 API
+	- When you create an AMI, by default its marked private. You have to manually change the permissions to make the image public or share images with individual accounts
+	- Hardware Virtual Machines (HVM) AMI's Available
+	- Paravirtual (PV) AMI's Available
+	- You can select an AMI based on:
+		- Region
+		- OS
+		- Architecture (32 vs. 64 bit)
+		- Launch Permissions
+		- Storage for the root device (Instance Store Vs. EBS)
+			- Types of virtual machines images (AMI)
+				- HVM (hardware virtual machine): fully virtualised hardware and boot. Recommended for best performance.
+				- PV (paravirtual): uses a special boot loader, can run on hardware that does not have direct support for virtualisation. Recommended for old generation instances.
+
+- ### **Security Groups**
+	- Acts like virtual firewalls for the associated EC2 instance
+	- If you edit a security group, it takes effect immediately.
+	- You can not set any deny rules in security groups, you can only set allow rules
+	- There is an implicit deny any any at the end of the security group rules
+	- You don't need outbound rules for any inbound request. Rules are stateful meaning that any request allowed in, is automatically allowed out
+	- You can have any number of EC2 instances associated with a security group
+
+- ### **Snapshots:**
+	- You can take a snapshot of a volume, this will store that volumes snapshot on S3
+	- Snapshots are point in time copies of volumes
+	- The first snapshot will be a full snapshot of the volume and can take a little time to create
+	- Snapshots are incremental, which means that only the blocks that have changes since your last snapshot are moved to S3
+	- Snapshots of encrypted volumes are encrypted automatically
+	- Volumes restored from encrypted snapshots are encrypted automatically
+	- You can share snapshots but only if they are not encrypted
+	- Snapshots can be shared with other AWS accounts or made public in the market place again as long as they are NOT encrypted
+	- If you are making a snapshot of a root volume, you should stop the instance before taking the snapshot
+	- Number of EBS snapshots : 10,000
 ---			
 > ## Elastic Load Balancer (ELB)
 - ### **Types of Load Balancer**
@@ -321,7 +416,7 @@ So when things do go wrong you can go in and diagnose and debug problems quickly
 
 >  Refrences
 
-- ### [User Guid](https://docs.aws.amazon.com/index.html)
-- ### [Exam Guid](https://d1.awsstatic.com/training-and-certification/docs-dev-associate/AWS_Certified_Developer_Associate_Updated_June_2018_Exam_Guide_v1.3.pdf)
-- ### [Certification Prep](https://aws.amazon.com/certification/certification-prep/)
+- #### [User Guid](https://docs.aws.amazon.com/index.html)
+- #### [Exam Guid](https://d1.awsstatic.com/training-and-certification/docs-dev-associate/AWS_Certified_Developer_Associate_Updated_June_2018_Exam_Guide_v1.3.pdf)
+- #### [Certification Prep](https://aws.amazon.com/certification/certification-prep/)
 ---
