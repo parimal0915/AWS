@@ -166,6 +166,25 @@ For more information on AWS, visit <a href="https://aws.amazon.com/">aws.amazon.
 	- Number of EBS snapshots : 10,000
 ---			
 > ## Elastic Load Balancer (ELB)
+Elastic Load Balancing offers two types of load balancers that both feature high availability, automatic scaling, and robust security. These include the Classic Load Balancer that routes traffic based on either **application or network level information**, and the Application Load Balancer that routes traffic based on advanced application level information that includes the **content of the request**. 
+
+- When configuring ELB health checks, bear in mind that you may want to create a file like healthcheck.html or point the ping path of the health check to the main index file in your application
+- Enable Cross-Zone Load Balancing will distribute load across all back-end instances, even if they exist in different AZ's
+- ELBs are NEVER given public IP Addresses, only a public DNS name
+- ELBs can be In Service or Out of Service depending on health check results
+- Charged by the hour and on a per GB basis of usage
+- Must be configured with at least one listener
+- A listener must be configured with a protocol and a port for front end (client to ELB connection), as well as a protocol and port for backed end (ELB to instances connection)
+- ELBs support HTTP, HTTPS, TCP, and SSL (Secure TCP)
+- ELBs support all ports (1-65535)
+- ELBs do not support multiple SSL certificates
+- HTTP Error Codes:
+	- 200 - The request has succeeded
+	- 3xx - Redirection
+	- 4xx - Client Error (404 not found)
+	- 5xx - Server Error
+- **There can be 20 Load balancer per region**
+
 - ### **Types of Load Balancer**
 	- Application load balancer (http & https traffic Layer 7)
 	- Network load balancer (TCP traffic where extreme performance is required : layer 4)
@@ -279,16 +298,17 @@ For more information on AWS, visit <a href="https://aws.amazon.com/">aws.amazon.
 		- you can have read replicas in different region
 ---		
 > ## S3 (Simple Storage Service)
-```
-- Used for file storage, objects, 
+
+- Used for file storage, objects
+- **S3 URL structures are region/amazon.aws.com/bucketname (https://s3-eu-west-1.amazonaws.com/myawesomebucket)**
 - Not for OS & database
 - Individual Amazon S3 objects can range in size from a minimum of 0 bytes to a maximum of 5 terabytes. The largest object that can be uploaded in a single PUT is 5 gigabytes. For objects larger than 100 megabytes, customers should consider using the Multipart Upload capability.
 - Unlimited storage
 - Files are stored in buckets (Similar to Folder)
 - S3 is a universal namespace, ie names must be unique globally
 - When you upload a file into S3 you're going to receive an HTP 200 code.
-- When you add the new object into history you can read it immediately you can read
-- But then if you wanted to make a modification or delete that file it can just take a little bit of time to propagate.
+- Read after write consistency for PUTS of new objects (As soon as you write an object, it is immediately available)
+- Eventual consistency for overwrite PUTS and DELETES. (Updating or deleting an object could take time to propagate)
 - S3 is object based 
 	- key - name of object
 	- value - data 
@@ -301,9 +321,49 @@ For more information on AWS, visit <a href="https://aws.amazon.com/">aws.amazon.
 		- Transfre Acceleration
 - Build for 99.99% availability
 - 99.99999999999% durability (11 x 9s)
-- Versioning
-- Encryption
-```
+- Versioning is available but must be enabled. It is off by default
+- Offers encryption, and allows you to secure the data using ACLs
+- S3 charges for storage, requests, and data transfer
+- Bucket names must be all lowercase, however in US-Standard if creating with the CLI tool, it will allow capital letters
+- When you upload a file to S3, by default it is set private
+
+- ## Versioning and Cross-Region Replication (CRR):
+	- Versioning must be enabled in order to take advantage of Cross-Region Replication
+	- Once Versioning is turned on, it can not be turned off, it can only be suspended
+	- If you truly wanted versioning off, you would have to create a new bucket and move your objects
+	- When versioning is enabled, you will see a slider tab at the top of the console that will enable you to hide/show all versions of files in the bucket
+	- With versioning enabled, if you delete a file, S3 creates a delete marker for that file, which tells the console to not display the file any longer
+	- In order to restore a deleted file you simply delete the delete marker file, and the file will then be displayed again in the bucket
+	- To move back to a previous version of a file including a deleted file, simply delete the newest version of the file or the delete marker, and the previous version will be displayed
+	- Versioning does store multiple copies of the same file. So in the example of taking a 1MB file, and uploading it. Currently your storage usage would be 1MB. Now if you update the file with small tweeks, so that content changes, but the size remains the same, and upload it. With the version tab on hide, you will see only the single updated file, however if you select show on the slider, you will see that both the original 1MB file exists as well as the updated 1MB file, so your total S3 usage is now 2MB not 1MB
+	- Cross Region Replication (CRR) has to be enabled on both the source and destination buckets in the selected regions
+	- You have the ability to select a separate storage class for any Cross Region Replication destination bucket
+	- CRR does NOT replicate existing objects, only future objects meaning that only objects stored post turning the feature on will be replicated
+	- Any object that already exists at the time of turning CRR on, will NOT be automatically replicated
+	- Versioning integrates with life-cycle management and also supports MFA delete capability. This will use MFA to provide additional security against object deletion
+
+- ## Life-cycle Management:
+	- When clicking on Life-cycle, and adding a rule, a rule can be applied to either the entire bucket or a single 'folder' in a bucket
+	- Rules can be set to move objects to either separate storage tiers or delete them all together
+	- Can be applied to current version and previous versions
+	- If multiple actions are selected for example transition from STD to IA storage 30 days after upload, and then Archive 60 days after upload is also selected, once an object is uploaded, 30 days later the object will be moved to IA storage. 30 days after that the object will be moved to glacier.
+	- Calculates based on UPLOAD date not Action data
+	- Transition from STD to IA storage class requires MINIMUM of 30 days. You can not select or set any data range less than 30 days
+	- Archive to Glacier can be set at a minimum of 1 day If STD->IA is NOT set
+	- If STD->IA IS set, then you will have to wait a minimum of 60 days to archive the object because the minimum for STD->IA is 30 days, and the transition to glacier then takes an additional 30 days
+	- When you enable versioning, there will be 2 sections in life-cycle management tab. 1 for the current version of an object, and another for previous versions
+	- Minimum file size for IA storage is 128K for an object
+	- Can set policy to permanently delete an object after a given time frame
+	- If versioning is enabled, then the object must be set to expire, before it can be permanently deleted
+	- Can not move objects to Reduced Redundancy using life-cycle policies
+
+- ## S3 Transfer Acceleration:
+- Utilizes the CloudFront Edge Network to accelerate your uploads to S3
+- Instead of uploading directly to your S3 bucket, you can use a distinct URL to upload directly to an edge location which will then transfer the file to S3
+- Transfer Acceleration URLs will have the format of **bucketname.s3-accelerate.amazonaws.com**
+- There is a test utility available that will test uploading direct to S3 vs through Transfer Acceleration, which will show the upload speed from different global locations
+- Turning on and using Transfer Acceleration will incur an additional fee
+
 - ## S3 - Storage Tiers/Classes
 	- **S3**: regular
 	- **S3-IA(Infrequent access)** - low cost , infrequest and rapid access
@@ -315,8 +375,8 @@ For more information on AWS, visit <a href="https://aws.amazon.com/">aws.amazon.
 - ## S3 Security
 	- By default all newly created buckets are private
 	- Setup access control using
-	- Bucket Policies - Applied at bucket level
-	- Access Control List - Applied at object level
+		- Bucket Policies - Applied at bucket level
+		- Access Control List - Applied at object level
 	- you can configure S3 bucket to create access logs , which logs all the request made to bucket and these logs can be stored in other s3 bucket
 		
 - ## S3 ACL's & Policies
@@ -331,6 +391,21 @@ For more information on AWS, visit <a href="https://aws.amazon.com/">aws.amazon.
 				- using AWS Key Management service
 			- **SSE-C** (Server Side Encryption with customer provided keys)
 		- **Client Side Encryption** - you encrypt files before uploading to s3 yourself
+
+- ## Web Hosting:
+	- Used for static hosting only; Server side code will not execute
+	- Don't need to worry about scaling, ELBs or number of instances, S3 handles all of that for you
+	- When you create an S3 bucket or enable hosting, you still need to make sure that either the files or the entire bucket are set to public accesibility
+	- Bucket URLs are structured such as https://s3-eu-west-1.amazonaws.com/somebucketname
+	- Hosted site URLs are structured as http://somebucketname.s3-website-eu-west-1.amazonaws.com
+	- Hosting sites on S3 does not allow HTTPS support
+	- Sites hosted on S3 can be served via HTTPS if distributed by cloudfront; Cloudfront would be configured to terminate a client HTTPS requst, and then talk to the bucket via standard HTTP
+	- Can be configured to redirect to another URL
+- ## CORS Configuration:
+	- Cross Origin Resource Sharing (CORS)
+	- Configured in the permisssions section of the properties tab in a bucket
+	- CORS configuration is in XML format and will be pasted directly into the permissions
+	- CORS is required if you are calling an asset that resides in another bucket from the bucket that your static site resides in using the hosted URL
         
 #### And just remember if you want to enforce the use of encryption for your files stored in S-3 use a bucket policy to deny any request that does not include the "x-amz-server-side-encryption" server side encryption parameter within the request header.
 ---		
