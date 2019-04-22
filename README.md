@@ -23,6 +23,7 @@ For more information on AWS, visit <a href="https://aws.amazon.com/">aws.amazon.
 	
 - **Root user has complete Admin access**
 - **New user has no permissions when created**
+- **You can assign up to 10 policies to a single group**
 ---
 > ## EC2 (Elastic compute cloud) just virtual machines in cloud
 
@@ -301,6 +302,10 @@ Elastic Load Balancing offers two types of load balancers that both feature high
 
 - Used for file storage, objects
 - **S3 URL structures are region/amazon.aws.com/bucketname (https://s3-eu-west-1.amazonaws.com/myawesomebucket)**
+- **Bucket/Object url format: http://${BUCKET_NAME}.s3.amazonaws.com/${OBJECT_KEY}**
+- **S3 can be used to host (static) websites :  bucket-name.s3-website-<AWS-region>.amazonaws.com**
+- And bucket-name.s3-website.AWS-region.amazonaws.com. You can use Cloudfront as a CDN to make the website fast globally.
+
 - Not for OS & database
 - Individual Amazon S3 objects can range in size from a minimum of 0 bytes to a maximum of 5 terabytes. The largest object that can be uploaded in a single PUT is 5 gigabytes. For objects larger than 100 megabytes, customers should consider using the Multipart Upload capability.
 - Unlimited storage
@@ -467,7 +472,7 @@ designated as the destination for all failed invocation events
 	- Use DLQ
 - [AWS Lambda Limitations](https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 
-
+***
 > ## Step Functions
 Step functions that basically allow you to visualize and test your serverless applications and they provide a graphic console to a range and visualize the components of your applications as a series of steps.
 
@@ -475,6 +480,167 @@ This makes it easy to build and run multistep applications so it functions autom
 
 So when things do go wrong you can go in and diagnose and debug problems quickly.
 
+***
+> ## DynamoDB
+Fast and flexible NoSQL DB service for all apps that need consistent, single-digit millisecond latency at any scale. It is a fully managed database and supports both document and key-value data models. Its flexible data model and reliable performance make it a great fit for mobile, web, gaming, ad-tech, IoT, and many other applications. 
+
+- **Stored on SSD Storage**
+- Spread across 3 geographically distinct data centers
+- **Eventual Consistent Reads (Default)**
+	- Consistency across all copies of data is usually reached within 1 second
+	- Repeating a read after a short time should return updated data
+	- Best Read Performance
+- **Strongly Consistent Reads**
+	- Returns a result that reflects all writes that received a successful response prior to the read
+- Provisioned throughput capacity
+- Write throughput 0.0065 per hour for every 10 units
+- Read throughput 0.0065 per hour for every 50 units
+- **First 25 GB of storage is free**
+- **Storage costs of 25 cents per additional GB per Month**
+- Can be expensive for writes, but really really cheap for reads
+- **The combined key/value size must not exceed 400 KB for any given document**
+- **Supports attribute nesting up to 35 levels**
+- Conditional writes are idempotent, you can send the same conditional write request multiple times, but it will have no further effect on the item after the first time Dynamo performs the update
+- Supports atomic counters, using the UpdateItem operation to increment or decrement the value of an existing attribute without interfering with other write requests
+- Atomic counter updates are not idempotent, the counter will increment each time you call UpdateItem
+- If you can have a small margin of error in your data, then use atomic counters
+- If your application needs to read multiple items, you can use the BatchGetItem API endpoint;
+- **A single request can retrieve up to 1MB of data with as many as 100 items**
+- A single BatchGetItem request can retrieve items from multiple tables
+- All write requests are applied in the order in which they are received
+
+
+### **Pricing(calculate the amount of writes and reads per second)**
+- Steps
+	- Calculate Write's/Read's per second
+	- Write/Read capicity unit can handle 1 write/read operation per second
+	- Charge for Write is $0.0065 per 10 units
+	- Charge for Read is $0.0065 per 50 units
+
+- Example
+	- Calculate read & write cost for 28GB of storage and 1,000,000 writes per day
+		- Calculate writes per second
+			- 1,000,000/24(hrs) = 41,666.67
+			- 41,666.67/60(min) = 694.44
+			- 694.44/60(sec) = 11.574 writes per second
+		- Write/Read capicity unit can handle 1 write/read operation per second
+			- This example will require 12 write capicity units
+		- Charges for write per 10 units is $0.0065
+			- $0.0065/10 = $0.00065 -> per unit
+		- Charges for 12 units
+			- $0.00065 * 12 = $0.0078
+		- Charges for 12 units for 24 hrs
+			- $0.0078 * 24 = $0.1872 per day for writes
+		- Charge for read is $0.0065 per 50 units
+			- $0.0065 / 50 = $0.00013 per unit
+		- Charges for 12 units
+			- $0.00013 * 12 (required read units) = $0.00156
+		- Charges for 12 units for 24 hrs
+			- $0.00156 * 24 (hours per day) = $0.03744 per day for reads
+		- Using 28 GB storage with first 25 GB free = 3 GB storage required
+			- 3 GB * $0.25 per GB (after initial 25) = $0.75
+
+### **Indexes:**
+	- Primary Key TYpes:
+		- Single Attribute (Unique Id)
+			- Partition Key (Hash Key composed of one attribute)
+			- No 2 items in a table can have the same partition key value
+		- Composit (Unique Id and Date Range)
+			- Partition Key & Sort Key (Hash and Range) composed of two attributes
+			- 2 Items can have the same partition key, but they MUST have a different sort key
+			- All Items with the same partition key are stored together, in sorted order by the sort key value
+- **Local Secondary Index (LSI):**
+	- Has same partition key but different sort key
+	- Can only be created when creating Table
+	- Cannot remove or modify after creation
+	- Can have 5 LSI per table
+- **Global Secondary Index (GSI):**
+	- Has DIFFERENT partition key and different sort key
+	- Can be created at table creation or added LATER
+	- Can have 5 GSI per table
+
+### **Streams:**
+- Used to capture any kind of modification of the DynamoDB tables
+- If new item is added to the table, the stream captures an image of the entire item, including all of its attributes
+- If an item is updated, the stream captures the before and after image of any attributes that were modified in the item
+- If an item is deleted from the table, the stream captures an image of the entire item before it was deleted
+- Streams are stored for 24 hours and then is lost
+- Streams can trigger functions with Lambda that will perform actions based on the instantiation of a stream event
+
+### **Query's:**
+- Operation that finds items in a table using only the primary key attribute value
+- Must provide a partition attribute name and distinct value to search for
+- Optionally can provide a sort key attribute name and value and use comparison operator to refine the search results
+- By default a query returns all of the data attributes for items with the specified primary key(s)
+- The ProjectionExpression parameter can be used to only return some of the attributes from a query as opposed to the default all
+- Results are always sorted by the sort key
+- If the data type of the sort key is a number, the results are returned in numeric order
+- If the data type of the sort key is a string, the results are returned in order of ASCII character code values
+- Sort order is ascending, the ScanIndexForward parameter can be set to false to sort in descending order
+- By default queries are eventually consistent but can be changed to strongly consistent
+- More efficient then a scan operation
+- For quicker response times, design your tables in a way that can use the query, GET, or BatchGetItem API
+
+
+### **Scans:**
+- Examines every item in the table
+- By default, a scan returns all of the data attributes for every item
+- Can use the ProjectionExpression parameter so that the scan only returns some of the attributes, instead of all
+- Always scans the entire table, then filters out values to provide the desired result (added step of removing data from initial dataset)
+- Should be avoided on a large table with a filter that removes many results
+- As table grows, the scan operation slows
+- Examines every item for the requested values, and can use up provisioned throughput for a large table in a single operation
+
+
+### **Provisioned Throughput:**
+- Unit of read provisioned throughput
+	- All read operation are performed in chunks of 4kb
+	- Eventual consistent reads (default) consist of 2 reads per second
+	- Strongly consistent reads consist of 1 read per second
+	- Take the (size of the read rounded to the nearest 4 KB chunk / 4 KB) * No. of items = read throughput
+	- Divide by 2 if eventually consistent
+- Unit of write provisioned throughput:
+	- All writes are 1 KB
+	- All writes consist of 1 write per second
+
+- Calculate Read/Write Throughput
+### Steps
+- Calculate number of chunks required to read/write one item
+- Multiply with total items to read/write
+- All write consist of 1 write operation per second
+- Eventual consistent reads (default) consist of 2 reads per second so divide by 2
+- Strongly consistent reads consist of 1 read per second
+
+
+### Calculate Read Throughput
+- Example: 1
+	-	Application requires to read 10 items of 1 KB per second using eventual consistency, whats the read throughput
+	- Calculate the number of read units per item needed
+	- 1 KB rounded to the nearest 4 KB increment = 4 (KB) or a single chunk
+	- 4 KB / 4 KB = 1 read unit per item
+	- 1 x 10 read items = 10
+	- Using eventual consistency is 10 /2 = 5
+	- 5 units of read throughput
+- Example 2:
+	- Application requires to read 10 items of 6 KB per second using eventual consistency, whats the read throughput
+	- Calculate the number of read units per item needed
+	- 6 KB rounded to the nearest 4 KB increment = 8 (KB) or 2 chunks of 4 KB
+	- 8 KB / 4 KB = 2 read unit per item
+	- 2 x 10 read items = 20
+	- Using eventual consistency is 20 /2 = 10
+	- 10 units of read throughput
+
+### Calculate Write Throughput
+- Example: 1
+	- Application requires to write 5 items with each being 10KB in size per second
+	- Each write unit consists of 1 KB of data, need to write 5 items per second with each item using 10 KB of data
+	- 5 items * 10 KB = 50 write units
+	- Write throughput is 50 units
+- Example 2:
+	- Application requires to write 12 items with each being 100KB in size per second
+	- Each write unit consists of 1 KB of data, need to write 12 items per second with each item using 100 KB of data
+	- 12 items * 100 KB = 1200 write units
+	- Write throughput is 1200 units
 
 
 
